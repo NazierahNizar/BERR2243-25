@@ -80,3 +80,40 @@ app.delete('/rides/:id', async (req, res) => {
     }
 });
 
+// PATCH /rides/:id - Block user
+app.patch('/admin/block-user/:id', async (req, res) => {
+    try {
+        const result = await db.collection('users').updateOne(
+            { _id: new ObjectId(req.params.id) },
+            { $set: { blocked: true } }
+        );
+
+        res.status(200).json({  blocked: result.modifiedCount });
+    }   catch (err) {
+        res.status(400).json({ error: "Invalid ride ID or data" });
+    }
+});
+
+// Get - View System
+app.get('/admin/analytics' , async (req, res) => {
+    try{
+        const userCount = await db.collection('users').countDocument();
+        const rideCount = await db.collection('rides').countDocument();
+        res.status(200).json({ totalUsers: userCount, totalRides: rideCount });
+    }   catch (err) {
+        res.status(500),json({ error: "Failed to fetch analytics" });
+    }
+});
+
+// POST - collection
+app.post('/rides' , async (req, res) => {
+    try {
+        const result = await db.collection('rides').insertOne(req,body);
+        res.status(201).json({ id: result.insertedID });
+    }   catch (err) {
+        res.status(400).json({ error: "Invalid ride data" });
+    }
+});
+
+
+

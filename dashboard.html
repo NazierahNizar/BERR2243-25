@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>eHailing Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    h1 { color: #333; }
+    input, button, select { margin: 5px; padding: 8px; }
+    .ride-card { border: 1px solid #ccc; padding: 10px; margin: 10px 0; border-radius: 5px; }
+  </style>
+</head>
+<body>
+
+  <h1>eHailing Dashboard</h1>
+
+  <h3>Create New Ride</h3>
+  <input type="text" id="driver" placeholder="Driver Name" />
+  <input type="text" id="origin" placeholder="Origin" />
+  <input type="text" id="destination" placeholder="Destination" />
+  <button onclick="createRide()">Create Ride</button>
+
+  <h3>All Rides</h3>
+  <button onclick="fetchRides()">Refresh Rides</button>
+  <div id="ridesList"></div>
+
+  <script>
+    const API_URL = 'http://localhost:3000/rides';
+
+    async function fetchRides() {
+      const res = await fetch(API_URL);
+      const rides = await res.json();
+      const list = document.getElementById('ridesList');
+      list.innerHTML = '';
+
+      rides.forEach(ride => {
+        const div = document.createElement('div');
+        div.className = 'ride-card';
+        div.innerHTML = `
+          <strong>Driver:</strong> ${ride.driver} <br/>
+          <strong>Origin:</strong> ${ride.origin} <br/>
+          <strong>Destination:</strong> ${ride.destination} <br/>
+          <strong>Status:</strong> ${ride.status || 'pending'} <br/>
+          <input type="text" placeholder="New Status" id="status-${ride._id}" />
+          <button onclick="updateRide('${ride._id}')">Update</button>
+          <button onclick="deleteRide('${ride._id}')">Delete</button>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    async function createRide() {
+      const driver = document.getElementById('driver').value;
+      const origin = document.getElementById('origin').value;
+      const destination = document.getElementById('destination').value;
+
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ driver, origin, destination })
+      });
+
+      if (res.ok) {
+        alert('Ride created!');
+        fetchRides();
+      }
+    }
+
+    async function updateRide(id) {
+      const status = document.getElementById(`status-${id}`).value;
+
+      const res = await fetch(`${API_URL}/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+
+      if (res.ok) {
+        alert('Ride updated!');
+        fetchRides();
+      }
+    }
+
+    async function deleteRide(id) {
+      const res = await fetch(`${API_URL}/${id}`, {
+        method: 'DELETE'
+      });
+
+      if (res.ok) {
+        alert('Ride deleted!');
+        fetchRides();
+      }
+    }
+
+    // Load rides on page load
+    fetchRides();
+  </script>
+
+</body>
+</html>
